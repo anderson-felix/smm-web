@@ -7,5 +7,5 @@ type FuncType = (
 ) => Promise<void>;
 
 export const submitComment: FuncType = async (params, domain = 'user') => {
-  await api[domain].post(`comment/sumbit`, params);
+  await api[domain].post(`/comment/submit`, params);
 };

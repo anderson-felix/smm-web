@@ -1,12 +1,13 @@
-import { Tag } from 'antd';
 import { useEffect, useState } from 'react';
+
 import { ICollaborator } from '../../interfaces/collaborator';
+import { ISubmitCommentParams } from '../../interfaces/comment';
 import { orderStatusArray, OrderStatusType } from '../../interfaces/order';
 import { ISectorData } from '../../interfaces/sector';
 import formatShortName from '../../utils/formatShortName';
 import { CommentList } from '../CommentList';
 import { TextInput, SelectInput, TextAreaInput } from '../Inputs';
-import { CustomTagProps, SelectOption } from '../Inputs/interfaces';
+import { SelectOption } from '../Inputs/interfaces';
 import { IOrderModalContentProps } from './interfaces';
 import {
   Container,
@@ -25,6 +26,7 @@ export const OrderModalContent: React.FC<IOrderModalContentProps> = ({
   errors,
   sectors,
   customers,
+  onSubmitComment,
 }) => {
   const [collaborators, setCollaborators] = useState<ICollaborator[]>([]);
   const [sectorsData, setSectorsData] = useState<ISectorData[]>([]);
@@ -85,15 +87,32 @@ export const OrderModalContent: React.FC<IOrderModalContentProps> = ({
   const handleEstimatedHours = (
     estimated_hours: string,
     sectorData: ISectorData,
-  ) =>
-    setSectorsData(e =>
-      e.map(data =>
+  ) => {
+    let updatedItems: ISectorData[] = [];
+    setSectorsData(e => {
+      const updated = e.map(data =>
         data.sector_id === sectorData.sector_id
           ? { ...sectorData, estimated_hours }
           : data,
-      ),
-    );
+      );
 
+      updatedItems = updated;
+
+      return updated;
+    });
+
+    setOrder(e => ({
+      ...e,
+      sectors: sectors
+        .filter(s => updatedItems.find(v => v.sector_id === s.id))
+        .map(s => ({
+          ...s,
+          estimated_hours:
+            updatedItems.find(v => v.sector_id === s.id)?.estimated_hours ||
+            null,
+        })),
+    }));
+  };
   const handleCustomerChange = (opt: SelectOption[]) => {
     const customer_id = opt[0]?.value || null;
     const name = opt[0]?.label || null;
@@ -113,6 +132,23 @@ export const OrderModalContent: React.FC<IOrderModalContentProps> = ({
       ...e,
       status: opt[0].value as OrderStatusType,
     }));
+  };
+
+  const handleSubmitComment = (params: ISubmitCommentParams) => {
+    setOrder(e => ({
+      ...e,
+      comments: [
+        {
+          comment_id: '',
+          created_at: new Date(),
+          sender: { id: user.id, name: user.name },
+          text: params.text,
+        },
+        ...e.comments,
+      ],
+    }));
+
+    onSubmitComment(params);
   };
 
   return (
@@ -178,12 +214,16 @@ export const OrderModalContent: React.FC<IOrderModalContentProps> = ({
 
         <SelectInput
           value={order.collaborators.map(c => c.id)}
-          options={collaborators.map(c => ({
-            label: `${formatShortName(c.name)} - ${
-              c.hourly_price ? c.hourly_price.concat(' R$') : undefined
-            }`,
-            value: c.id,
-          }))}
+          options={sectors
+            .filter(s => sectorsData.find(d => d.sector_id === s.id))
+            .flatMap(s =>
+              s.collaborators.map(c => ({
+                label: `${formatShortName(c.name)} - ${
+                  c.hourly_price ? c.hourly_price.concat(' R$') : undefined
+                }`,
+                value: c.id,
+              })),
+            )}
           onChange={handleCollaboratorChange}
           disabled={!sectorsData.length}
           placeholder="Colaborador - Valor hora"
@@ -191,8 +231,17 @@ export const OrderModalContent: React.FC<IOrderModalContentProps> = ({
           isMulti
         />
       </SelectGroup>
-      <ContentLabel data-start>Comentários</ContentLabel>
-      <CommentList user={user} comments={order.comments} />
+      {order.id ? (
+        <>
+          <ContentLabel data-start>Comentários</ContentLabel>
+          <CommentList
+            user={user}
+            comments={order.comments}
+            onSubmitComment={handleSubmitComment}
+            order={order}
+          />
+        </>
+      ) : null}
     </Container>
   );
 };

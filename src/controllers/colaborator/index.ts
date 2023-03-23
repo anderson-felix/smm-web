@@ -1,3 +1,3 @@
-export * from './createCustomer';
-export * from './listCustomers';
-export * from './updateCustomer';
+export * from './createCollaborator';
+export * from './listCollaborators';
+export * from './updateCollaborator';

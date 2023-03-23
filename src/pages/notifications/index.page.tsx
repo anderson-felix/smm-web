@@ -10,7 +10,7 @@ import { getProfile } from '../../controllers/user';
 import { Container } from './styles';
 
 const Notifications: React.FC = () => {
-  return <Container>NOTIFICAÇÕES</Container>;
+  return <Container>EM BREVE</Container>;
 };
 
 export default Notifications;

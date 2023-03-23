@@ -1,10 +1,5 @@
-import {
-  EditOutlined,
-  EllipsisOutlined,
-  SettingOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
-import { Avatar, Card as AntCard, Skeleton, Switch } from 'antd';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Card as AntCard, Skeleton } from 'antd';
 import React from 'react';
 
 const { Meta } = AntCard;
@@ -31,7 +26,7 @@ export const Card: React.FC<ICardProps> = ({
   return (
     <>
       <AntCard style={{ width: 300, marginTop: 16 }} actions={actions}>
-        <Skeleton loading={loading} avatar active>
+        <Skeleton loading={loading} active>
           <Meta title={title} description={description} />
         </Skeleton>
       </AntCard>

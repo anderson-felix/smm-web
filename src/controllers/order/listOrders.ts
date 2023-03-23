@@ -9,6 +9,7 @@ type FuncType = (
 
 export const listOrders: FuncType = async (params = {}) => {
   params.sort ||= 'updated_at';
+  params.order ||= 'DESC';
   const query = buildQueryParams(params);
 
   const { data } = await api.user.get(`order/list?${query}`);

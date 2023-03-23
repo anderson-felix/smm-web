@@ -10,8 +10,7 @@ import {
 import { getProfile } from '../../controllers/user';
 import { Container, StyledButton, TopContent } from './styles';
 import { Modal } from '../../components/Modal';
-import { OrderList } from '../../components/OrderList';
-import { listOrders } from '../../controllers/order';
+import { createOrder, listOrders, updateOrder } from '../../controllers/order';
 import { IOrder } from '../../interfaces/order';
 import { OrderModalContent } from '../../components/OrderModalContent';
 import { listSectors } from '../../controllers/sector';
@@ -19,6 +18,10 @@ import { ISector } from '../../interfaces/sector';
 import { listCustomers } from '../../controllers/customer';
 import { ICustomer } from '../../interfaces/customer';
 import { IUser } from '../../interfaces/user';
+import { ISubmitCommentParams } from '../../interfaces/comment';
+import { submitComment } from '../../controllers/comment';
+import { useLoading, useToast } from '../../hooks';
+import { OrderList } from '../../components/OrderList';
 
 interface IProps {
   orders: IOrder[];
@@ -31,9 +34,9 @@ const defaultOrderObject: IOrder = {
   id: '',
   status: '' as any,
   display_name: '',
-  description: '',
+  description: null,
   created_by: '',
-  customer_id: '',
+  customer_id: null,
   collaborators: [],
   comments: [],
   files: [],
@@ -42,19 +45,19 @@ const defaultOrderObject: IOrder = {
   customer: null,
 };
 
-const Mainscreen: React.FC<IProps> = ({ user, orders, sectors, customers }) => {
+const Mainscreen: React.FC<IProps> = ({
+  user,
+  orders: _orders,
+  sectors,
+  customers,
+}) => {
+  const [orders, setOrders] = useState(_orders);
   const [openModal, setOpenModal] = useState(false);
   const [targetOrder, setTargetOrder] = useState<IOrder>(defaultOrderObject);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleConfirm = useCallback(async () => {
-    if (!targetOrder.display_name) {
-      setErrors({ display_name: 'Insira um nome' });
-      return;
-    }
-    setErrors({});
-    setOpenModal(false);
-  }, [targetOrder.display_name]);
+  const { addToast } = useToast();
+  const { setLoadingConfig } = useLoading();
 
   const handleCancel = () => {
     setOpenModal(false);
@@ -71,6 +74,71 @@ const Mainscreen: React.FC<IProps> = ({ user, orders, sectors, customers }) => {
     setOpenModal(true);
   };
 
+  const handleSubmitComment = useCallback(
+    async (params: ISubmitCommentParams) => {
+      try {
+        await submitComment(params);
+      } catch (err) {
+        addToast({
+          type: 'error',
+          title: 'Falha ao enviar comentário',
+          description: err?.message,
+        });
+      }
+    },
+    [addToast],
+  );
+
+  const handleSave = useCallback(async () => {
+    setLoadingConfig(config => ({ ...config, isLoading: true }));
+    try {
+      if (!targetOrder.display_name) {
+        setErrors({ display_name: 'Insira um nome' });
+        return;
+      }
+      setErrors({});
+
+      const orderDTO = {
+        collaborator_ids: targetOrder.collaborators.map(c => c.id),
+        customer_id: targetOrder.customer_id || null,
+        description: targetOrder.description || null,
+        display_name: targetOrder.display_name,
+        status: targetOrder.status || 'todo',
+        files: targetOrder.files,
+        flags: targetOrder.flags,
+        sectors: targetOrder.sectors.map(s => ({
+          estimated_hours: s.estimated_hours || null,
+          sector_id: s.id,
+        })),
+      };
+
+      if (!targetOrder.id) {
+        await createOrder(orderDTO);
+        setOrders(e => [targetOrder, ...e]);
+        setOpenModal(false);
+        return;
+      }
+
+      await updateOrder({
+        id: targetOrder.id,
+        ...orderDTO,
+      });
+      setOrders(e =>
+        e.map(order => (order.id === targetOrder.id ? targetOrder : order)),
+      );
+      setOpenModal(false);
+      setTargetOrder(defaultOrderObject);
+    } catch (err) {
+      addToast({
+        type: 'error',
+        title: 'Falha ao atualizar job',
+        description: err?.message,
+      });
+    } finally {
+      setLoadingConfig(config => ({ ...config, isLoading: false }));
+    }
+  }, [addToast, setLoadingConfig, targetOrder]);
+
   return (
     <Container>
       <TopContent>
@@ -82,7 +150,7 @@ const Mainscreen: React.FC<IProps> = ({ user, orders, sectors, customers }) => {
       <OrderList orders={orders} onOrderClick={handleOrderClick} />
       <Modal
         onCancel={handleCancel}
-        onConfirm={handleConfirm}
+        onConfirm={handleSave}
         title={`${targetOrder.id ? 'Editar' : 'Adicionar novo'} job`}
         show={openModal}
         width="40rem"
@@ -94,6 +162,7 @@ const Mainscreen: React.FC<IProps> = ({ user, orders, sectors, customers }) => {
           sectors={sectors}
           customers={customers}
           user={user}
+          onSubmitComment={handleSubmitComment}
         />
       </Modal>
     </Container>

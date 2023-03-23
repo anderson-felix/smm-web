@@ -4,7 +4,7 @@ import { FiUsers } from 'react-icons/fi';
 import { MessageOutlined } from '@ant-design/icons';
 
 import { HiOutlineCollection } from 'react-icons/hi';
-import { IOrder } from '../../interfaces/order';
+import { IOrder, OrderStatusType } from '../../interfaces/order';
 import { ImageCarousel } from '../ImageCarousel';
 import { ItemMeta, StyledList, ListItem } from './styles';
 import { Tags } from '../Tags';
@@ -13,6 +13,13 @@ interface IOrderListProps {
   orders: IOrder[];
   onOrderClick: (order: IOrder) => void;
 }
+
+const statusTag: Record<OrderStatusType, string> = {
+  todo: '#ffffff73',
+  doing: 'blue',
+  review: 'gold',
+  done: 'green',
+};
 
 export const OrderList: React.FC<IOrderListProps> = ({
   orders,
@@ -45,7 +52,12 @@ export const OrderList: React.FC<IOrderListProps> = ({
             text={`${item.collaborators.length}`}
             key="collaborators_quantity"
           />,
-          <Tags key="flags" flags={item.flags} />,
+          <Tags
+            key="flags"
+            flags={[
+              { color: statusTag[item.status], display_name: item.status },
+            ]}
+          />,
         ]}
         extra={
           <ImageCarousel
