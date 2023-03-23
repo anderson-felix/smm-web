@@ -10,6 +10,7 @@ export const TextInput: React.FC<InputProps> = ({
   placeholder,
   onKeyDown,
   style,
+  disabled,
 }) => {
   return (
     <StyledInput
@@ -19,6 +20,7 @@ export const TextInput: React.FC<InputProps> = ({
       onChange={e => onInputChange(e.target.value)}
       value={value}
       style={style}
+      disabled={disabled}
     />
   );
 };

@@ -10,7 +10,6 @@ import {
 import { getProfile } from '../../controllers/user';
 import { Container, StyledButton, TopContent } from './styles';
 import { Modal } from '../../components/Modal';
-import { IOrder } from '../../interfaces/order';
 import {
   createSector,
   listSectors,
@@ -18,16 +17,13 @@ import {
   removeSector,
 } from '../../controllers/sector';
 import { ISector } from '../../interfaces/sector';
-import { ICustomer } from '../../interfaces/customer';
 import { IUser } from '../../interfaces/user';
 import { useLoading, useToast } from '../../hooks';
 import { SectorList } from './components/SectorList';
 import { SectorModalContent } from './components/SectorModalContent';
 
 interface IProps {
-  orders: IOrder[];
   sectors: ISector[];
-  customers: ICustomer[];
   user: IUser;
 }
 
@@ -194,7 +190,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     };
   } catch (err) {
     forceTokenToExpire(res);
-    logError('mainscreen', err);
+    logError('sectors', err);
 
     return {
       redirect: {

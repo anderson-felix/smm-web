@@ -1,8 +1,8 @@
 import { TextAreaInput, TextInput } from '../../../../components/Inputs';
-import { IOrderModalContentProps } from './interfaces';
+import { ISectorModalContentProps } from './interfaces';
 import { Container } from './styles';
 
-export const SectorModalContent: React.FC<IOrderModalContentProps> = ({
+export const SectorModalContent: React.FC<ISectorModalContentProps> = ({
   setSector,
   sector,
   errors,

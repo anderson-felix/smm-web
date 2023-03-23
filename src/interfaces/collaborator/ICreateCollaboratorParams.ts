@@ -1,4 +1,4 @@
-import { Address, Flag } from '../shared';
+import { Address } from '../shared';
 
 export interface ICreateCollaboratorParams {
   name: string;
@@ -9,5 +9,4 @@ export interface ICreateCollaboratorParams {
   phone: string;
   hourly_price: string | null;
   address: Address | null;
-  recent_flags: Flag[];
 }

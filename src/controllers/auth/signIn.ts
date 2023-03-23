@@ -7,7 +7,9 @@ type FuncType = (
 ) => Promise<ICrendentialsResponse>;
 
 export const signIn: FuncType = async (credentials, domain = 'user') => {
-  const { data } = await api[domain].post('session', credentials);
+  const { data } = await api[domain].post('session', credentials, {
+    headers: { 'Access-Control-Allow-Origin': '*' },
+  });
 
   return data;
 };
