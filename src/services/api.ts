@@ -1,6 +1,8 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
-export const api = {
+export type ApiDomainType = 'user' | 'collaborator';
+
+export const api: Record<ApiDomainType, AxiosInstance> = {
   user: axios.create({
     baseURL: `${process.env.NEXT_PUBLIC_API_URL}/user`,
   }),

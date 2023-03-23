@@ -1,13 +1,25 @@
+import backgroundImage from '../assets/hexagon.svg';
+
 export type ITheme = typeof dark;
 
+const dimensions = {
+  navbarWidth: '14rem',
+};
+
 export const dark = {
-  title: 'light',
+  title: 'dark',
+  backgroundImage,
+  dimensions,
   colors: {
-    primary: '#0096c7',
+    primary: '#1668DC',
+    secondary: '#6200EE',
     background: '#121212',
+    surfaceBackground: '#121212cc',
+    lightBackground: '#ffffff73',
     listBackground: '#efefef',
-    cardBackground: '#F3F3F3',
+    cardBackground: '#001529',
     text: '#efefef',
+    textLight: '#ffffff73',
     error: '#ff4d4d',
     success: '#39AF7A',
     modalMask: 'rgba(0, 0 ,0, 0.3)',

@@ -10,8 +10,8 @@ import {
 } from '../../utils';
 import { useToast, useCustomRouter } from '../../hooks';
 import { getProfile } from '../../controllers/user';
-import { signIn } from '../../controllers/shared';
-import { Container, FormContainer } from './styles';
+import { signIn } from '../../controllers/auth';
+import { FormContainer } from './styles';
 import { PasswordInput, TextInput } from '../../components/Inputs';
 
 const SignIn: React.FC = () => {
@@ -52,27 +52,25 @@ const SignIn: React.FC = () => {
   }, [addToast, email, password, router]);
 
   return (
-    <Container>
-      <FormContainer>
-        <TextInput
-          value={email}
-          onInputChange={setEmail}
-          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-          error={emailError}
-          placeholder="E-mail"
-        />
+    <FormContainer>
+      <TextInput
+        value={email}
+        onInputChange={setEmail}
+        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+        error={emailError}
+        placeholder="E-mail"
+      />
 
-        <PasswordInput
-          value={password}
-          onInputChange={setPassword}
-          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-          error={passwordError}
-          placeholder="Senha"
-        />
+      <PasswordInput
+        value={password}
+        onInputChange={setPassword}
+        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+        error={passwordError}
+        placeholder="Senha"
+      />
 
-        <Button onClick={handleSubmit}>Entrar</Button>
-      </FormContainer>
-    </Container>
+      <Button onClick={handleSubmit}>Entrar</Button>
+    </FormContainer>
   );
 };
 
@@ -91,6 +89,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     };
   } catch (err) {
     forceTokenToExpire(res);
+
     return { props: { selectedPage: 'signin', pageTitle: 'Sign in' } };
   }
 };

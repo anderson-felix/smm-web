@@ -9,6 +9,7 @@ export const TextInput: React.FC<InputProps> = ({
   error,
   placeholder,
   onKeyDown,
+  style,
 }) => {
   return (
     <StyledInput
@@ -17,6 +18,7 @@ export const TextInput: React.FC<InputProps> = ({
       status={error ? 'error' : undefined}
       onChange={e => onInputChange(e.target.value)}
       value={value}
+      style={style}
     />
   );
 };

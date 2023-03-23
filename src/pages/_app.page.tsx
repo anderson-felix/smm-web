@@ -1,8 +1,8 @@
 import React from 'react';
 import Cookies from 'js-cookie';
 import { AppProps } from 'next/app';
-
 import { ConfigProvider, theme } from 'antd';
+
 import GlobalStyle from '../styles/global';
 import { api } from '../services/api';
 import {
@@ -18,7 +18,6 @@ export interface AppPropsType {
   user?: IUser;
   selectedPage?: string;
   pageTitle?: string;
-  headerTitle?: string;
 }
 
 const MyApp: React.FC<AppProps<AppPropsType>> = ({ Component, pageProps }) => {

@@ -1,59 +1,101 @@
 import React, { useCallback, useState } from 'react';
-import Cookies from 'js-cookie';
 import { GetServerSideProps } from 'next';
 
-import { Input } from 'antd';
+import { AiOutlinePlusCircle } from 'react-icons/ai';
 import {
   updateApiTokenFromCookie,
   forceTokenToExpire,
-  validateEmail,
+  logError,
 } from '../../utils';
-import { useToast, useCustomRouter } from '../../hooks';
 import { getProfile } from '../../controllers/user';
-import { signIn } from '../../controllers/shared';
-import { Container, FormContainer } from './styles';
+import { Container, StyledButton, TopContent } from './styles';
+import { Modal } from '../../components/Modal';
+import { OrderList } from '../../components/OrderList';
+import { listOrders } from '../../controllers/order';
+import { IOrder } from '../../interfaces/order';
+import { OrderModalContent } from '../../components/OrderModalContent';
+import { listSectors } from '../../controllers/sector';
+import { ISector } from '../../interfaces/sector';
+import { listCustomers } from '../../controllers/customer';
+import { ICustomer } from '../../interfaces/customer';
+import { IUser } from '../../interfaces/user';
 
-const Mainscreen: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+interface IProps {
+  orders: IOrder[];
+  sectors: ISector[];
+  customers: ICustomer[];
+  user: IUser;
+}
 
-  const { addToast } = useToast();
-  const router = useCustomRouter();
+const defaultOrderObject: IOrder = {
+  id: '',
+  status: '' as any,
+  display_name: '',
+  description: '',
+  created_by: '',
+  customer_id: '',
+  collaborators: [],
+  comments: [],
+  files: [],
+  flags: [],
+  sectors: [],
+  customer: null,
+};
 
-  const handleSubmit = useCallback(async () => {
-    if (!email || !validateEmail(email)) {
-      setEmailError('Insira um e-mail válido');
+const Mainscreen: React.FC<IProps> = ({ user, orders, sectors, customers }) => {
+  const [openModal, setOpenModal] = useState(false);
+  const [targetOrder, setTargetOrder] = useState<IOrder>(defaultOrderObject);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleConfirm = useCallback(async () => {
+    if (!targetOrder.display_name) {
+      setErrors({ display_name: 'Insira um nome' });
       return;
     }
-    if (password.length < 8) {
-      setPasswordError('A senha deve ter no mínimo 8 caracteres');
-      return;
-    }
-    setEmailError('');
-    setPasswordError('');
+    setErrors({});
+    setOpenModal(false);
+  }, [targetOrder.display_name]);
 
-    try {
-      const { token } = await signIn({ email, password });
+  const handleCancel = () => {
+    setOpenModal(false);
+    setTargetOrder(defaultOrderObject);
+  };
 
-      Cookies.set('token', token, { expires: 1 });
+  const handleOrderClick = (order: IOrder) => {
+    setTargetOrder(order);
+    setOpenModal(true);
+  };
 
-      router.push(`/mainscreen`);
-    } catch (err) {
-      addToast({
-        type: 'error',
-        title: 'Ocorreu um erro ao fazer login, chegue as credenciais.',
-      });
-    }
-  }, [addToast, email, password, router]);
+  const handleNewOrder = () => {
+    setTargetOrder(defaultOrderObject);
+    setOpenModal(true);
+  };
 
   return (
     <Container>
-      <FormContainer>
-        HELLO FROM SOCIAL MEDIA MANAGER
-        {/* <PrimaryButton title="Entrar" onClick={handleSubmit} /> */}
-      </FormContainer>
+      <TopContent>
+        <StyledButton onClick={handleNewOrder}>
+          <AiOutlinePlusCircle style={{ fontSize: '1.3rem' }} />
+          Adicionar
+        </StyledButton>
+      </TopContent>
+      <OrderList orders={orders} onOrderClick={handleOrderClick} />
+      <Modal
+        onCancel={handleCancel}
+        onConfirm={handleConfirm}
+        title={`${targetOrder.id ? 'Editar' : 'Adicionar novo'} job`}
+        show={openModal}
+        width="40rem"
+      >
+        <OrderModalContent
+          order={targetOrder}
+          setOrder={setTargetOrder}
+          errors={errors}
+          sectors={sectors}
+          customers={customers}
+          user={user}
+        />
+      </Modal>
     </Container>
   );
 };
@@ -64,10 +106,27 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
     updateApiTokenFromCookie(req);
 
-    await getProfile();
-    return { props: { selectedPage: 'mainscreen', pageTitle: 'Home' } };
+    const [user, orders, sectors, customers] = await Promise.all([
+      getProfile(),
+      listOrders(),
+      listSectors(),
+      listCustomers(),
+    ]);
+
+    return {
+      props: {
+        user,
+        orders: orders.results,
+        sectors: sectors.results,
+        customers: customers.results,
+        selectedPage: 'mainscreen',
+        pageTitle: 'Jobs',
+      },
+    };
   } catch (err) {
     forceTokenToExpire(res);
+    logError('mainscreen', err);
+
     return {
       redirect: {
         destination: '/signin',
